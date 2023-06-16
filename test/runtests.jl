@@ -1,6 +1,8 @@
 using LagrangianPerturbationTheory
 using Test
 
+const LPT = LagrangianPerturbationTheory
+
 @testset "LagrangianPerturbationTheory.jl" begin
 
     delta = LPT.load_example_ics()
