@@ -1,10 +1,10 @@
 module LagrangianPerturbationTheory
 
-using FFTW, HDF5, NPZ, LazyArtifacts
+using FFTW, HDF5, NPZ, LazyArtifacts, Interpolations
 
 
 include("types.jl")
-include("pyccl.jl")
+include("cosmo.jl")
 include("read_ics.jl")
 
 
