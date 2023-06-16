@@ -5,10 +5,11 @@ const LPT = LagrangianPerturbationTheory
 
 @testset "LagrangianPerturbationTheory.jl" begin
 
-    delta = LPT.load_example_ics()
+    delta_array = LPT.load_example_ics()
     boxsize = 7700. # comoving Mpc
     N=192
     grid_spacing = boxsize / N
+
     cosmology = CCLCosmology(Float64;
         Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
         n_s=0.9667, transfer_function="boltzmann_camb")
@@ -24,20 +25,14 @@ const LPT = LagrangianPerturbationTheory
     
     i=3; j=4; k=5
 
+    delta = LPT.FirstOrderLPTWebsky(grid_spacing, cosmology, delta_array)
+
     counter = 1
-    for xd in (-1,0)
-        x = (i+0.5)*grid_spacing + xd * boxsize
-        for yd in (-1,0)
-            y = (j+0.5)*grid_spacing + yd * boxsize
-            for zd in (-1,0)
-                z = (k+0.5)*grid_spacing + zd * boxsize
-    
-                chi = sqrt(x^2+y^2+z^2)
-                scale_factor = LPT.scale_factor_of_chi(cosmology, chi)
-                redshift = 1 / scale_factor - 1
-                δ₀ = delta[k+1,j+1,i+1]  # (py → jl) reverses dimensions, index+1
-                delta_linear = δ₀ * LPT.growth_factor(cosmology, scale_factor)
-                @test [x, y, z,xd,yd,zd,delta_linear] ≈ refs[counter]
+    for i_oct_x in (-1,0)
+        for i_oct_y in (-1,0)
+            for i_oct_z in (-1,0)
+                x, y, z, δ₁ = LPT.lptcell(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
+                @test [x, y, z, i_oct_x, i_oct_y, i_oct_z, δ₁] ≈ refs[counter]
                 counter += 1
             end
         end
