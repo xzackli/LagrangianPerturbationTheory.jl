@@ -1,0 +1,13 @@
+name = "LagrangianPerturbationTheory"
+uuid = "5e1607e4-5f4d-4e56-95bd-eafa9ef667dd"
+authors = ["Zack Li"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

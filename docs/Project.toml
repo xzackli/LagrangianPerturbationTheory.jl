@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LagrangianPerturbationTheory = "5e1607e4-5f4d-4e56-95bd-eafa9ef667dd"
