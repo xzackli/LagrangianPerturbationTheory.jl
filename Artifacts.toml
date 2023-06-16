@@ -1,0 +1,12 @@
+
+[density_example]
+git-tree-sha1 = "bc8950548e507cd6be3761607fbd75fef6a7aba3"
+lazy = true
+
+    [[density_example.download]]
+    url = "http://www.cita.utoronto.ca/~zack/Fvec_7700Mpc_n6144_nb30_nt16_ks192.h5.tar.gz"
+    sha256 = "fc59d17361e3af99868fe9b08f0b15e9217e75d6473bcf93e82085685bfe8545"
+
+
+
+
