@@ -8,6 +8,7 @@ function load_example_ics()
     return delta
 end
 
+# redshift = 1 / scale_factor - 1
 
 """
 octants are indexed -1 and 0
@@ -20,9 +21,8 @@ function lptcell(lpt::FirstOrderLPTWebsky{T}, i, j, k, octant_i, octant_j, octan
     
     chi = sqrt(x^2+y^2+z^2)
     scale_factor = scale_factor_of_chi(lpt.cosmology, chi)
-    # redshift = 1 / scale_factor - 1
     δ₀ = lpt.field[k+1,j+1,i+1]  # (py → jl) reverses dimensions, index+1
     field_linear = δ₀ * growth_factor(lpt.cosmology, scale_factor)
 
-    return (x=x, y, z, field_linear)
+    return (x=x, y, z, scale_factor, field_linear)
 end
