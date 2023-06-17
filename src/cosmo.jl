@@ -31,3 +31,31 @@ h_over_h0(c::CCLCosmology{T}, a) where T =
     pyconvert(T, pyccl.background.h_over_h0(c.p, a))
 scale_factor_of_chi(c::CCLCosmology{T}, chi) where T = 
     pyconvert(T, pyccl.background.scale_factor_of_chi(c.p, chi))
+
+
+# linear_interpolation(xs, A)
+struct InterpolatedCosmology{T, ITP}
+    growth_factor::ITP
+    scale_factor_of_chi::ITP
+end
+
+function InterpolatedCosmology(T, cosmology; amin=0.004, amax=1.0, N_grid=2048)
+    agrid = LinRange(T(amin), T(amax), N_grid)
+    growth_factor_grid = T[growth_factor(cosmology, a) for a in agrid]
+
+    chi_min = comoving_radial_distance(cosmology, amax)
+    chi_max = comoving_radial_distance(cosmology, amin)
+    chi_grid = LinRange(T(chi_min), T(chi_max), N_grid)
+    scale_factor_of_chi_grid = T[
+        scale_factor_of_chi(cosmology, chi) for chi in chi_grid]
+
+    growth_factor_itp = cubic_spline_interpolation(agrid, growth_factor_grid)
+    scale_factor_of_chi_itp = cubic_spline_interpolation(
+        chi_grid, scale_factor_of_chi_grid)
+    
+    return InterpolatedCosmology{T, typeof(growth_factor_itp)}(
+        growth_factor_itp, scale_factor_of_chi_itp)
+end
+
+growth_factor(c::InterpolatedCosmology, a) = c.growth_factor(a)
+scale_factor_of_chi(c::InterpolatedCosmology, chi) = c.scale_factor_of_chi(chi)
