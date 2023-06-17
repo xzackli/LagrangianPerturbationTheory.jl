@@ -1,6 +1,5 @@
 using LagrangianPerturbationTheory
-using Test
-
+using Test, Unitful, UnitfulAstro
 
 const refs1 = [[-7.559635416666667e+03,-7.519531250000000e+03,-7.479427083333333e+03,-1,-1,-1,+2.887501840140354e-03,+1.229087635970462e+02],
     [-7.559635416666667e+03,-7.519531250000000e+03,+2.205729166666667e+02,-1,-1,+0,+1.996219688295767e-02,+1.655453509493413e+01],
@@ -20,58 +19,63 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     [+3.408854166666666e+02,+1.002604166666667e+02,-7.599739583333333e+03,+0,+0,-1,+2.161071180536012e-02,+4.385928502315837e+00],
     [+3.408854166666666e+02,+1.002604166666667e+02,+1.002604166666667e+02,+0,+0,+0,+8.738518980451039e-02,+8.512036581035365e-02]]
 
-
-@testset "lattice_value" begin
+##
+@testset "lattice0" begin
     delta_array = LagrangianPerturbationTheory.load_example_ics()
-    boxsize = 7700. # comoving Mpc
-    grid_spacing = boxsize / size(delta_array,1)
-    cosmology = CCLCosmology(Float32;
+    grid_spacing = 7700.0f0u"Mpc" / size(delta_array,1)
+    cosmo = CCLCosmology(Float32;
         Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
         n_s=0.9667, transfer_function="boltzmann_camb")
-    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmology, delta_array)
+    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmo, delta_array)
 
+    octants = (-1, 0)
     i=3; j=4; k=5
     counter = 1
-    for i_oct_x in (-1,0), i_oct_y in (-1,0), i_oct_z in (-1,0)
-        x, y, z, a, δ₁ = lattice_value(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [x, y, z, i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
+    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
+        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
+        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
+            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
         counter += 1
     end
 
     i=8; j=2; k=2
     counter = 1
-    for i_oct_x in (-1,0), i_oct_y in (-1,0), i_oct_z in (-1,0)
-        x, y, z, a, δ₁ = lattice_value(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [x, y, z, i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter]
+    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
+        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
+        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
+            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter]
         counter += 1
     end
 end
 
 ##
-@testset "lattice_value interpolated" begin
+@testset "lattice0 interpolated" begin
     delta_array = LagrangianPerturbationTheory.load_example_ics()
-    boxsize = 7700. # comoving Mpc
+    boxsize = 7700.0f0u"Mpc"
     grid_spacing = boxsize / size(delta_array,1)
     cosmo_pyccl = CCLCosmology(Float32;
         Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
         n_s=0.9667, transfer_function="boltzmann_camb")
     amin = scale_factor_of_chi(cosmo_pyccl, √(3) * boxsize)
-    cosmology = InterpolatedCosmology(Float32, cosmo_pyccl, amin=amin)
-    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmology, delta_array)
+    cosmo = InterpolatedCosmology(cosmo_pyccl, amin=amin)
+    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmo, delta_array)
+    octants = (-1, 0)
 
     i=3; j=4; k=5
     counter = 1
-    for i_oct_x in (-1,0), i_oct_y in (-1,0), i_oct_z in (-1,0)
-        x, y, z, a, δ₁ = lattice_value(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [x, y, z, i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
+    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
+        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
+        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
+            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
         counter += 1
     end
 
     i=8; j=2; k=2
     counter = 1
-    for i_oct_x in (-1,0), i_oct_y in (-1,0), i_oct_z in (-1,0)
-        x, y, z, a, δ₁ = lattice_value(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [x, y, z, i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter] rtol=1e-7
+    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
+        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
+        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
+            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter] rtol=1e-7
         counter += 1
     end
 end

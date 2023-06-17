@@ -3,21 +3,28 @@ abstract type AbstractLPT end
 
 struct FirstOrderLPT <: AbstractLPT end
 
-struct InitialConditionsWebsky{T, LPT, C, AA} <: AbstractLPT 
-    grid_spacing::T
-    cosmology::C
+struct InitialConditionsWebsky{T, LPT, C, AA, TL} <: AbstractLPT 
+    cosmo::C
     field::AA
-
-    boxsize_x::T
-    boxsize_y::T
-    boxsize_z::T
+    grid_spacing::TL
+    boxsize_x::TL
+    boxsize_y::TL
+    boxsize_z::TL
 end
 
-function InitialConditionsWebsky(::Type{LPT}, grid_spacing, cosmology::C, 
-                                 field::AA) where {T, LPT, C, AA<:AbstractArray{T}}
+"""
+    InitialConditionsWebsky(::Type{LPT}, grid_spacing, cosmo, field)
+
+Returns a wrapper around an array `field` in Lagrangian coordinates, defined by 
+a kind of Lagrangian perturbation theory `LPT`, grid spacing, and cosmo. For 
+Websky, this kind of field is typically something like ``\\delta_0(\\vec{q})``, 
+the Lagrangian density at ``z=0``.
+"""
+function InitialConditionsWebsky(::Type{LPT}, grid_spacing::TL, cosmo::C, field::AA
+        ) where {T, LPT, C, AA<:AbstractArray{T}, TL}
     boxsize_x = size(field, 1) * grid_spacing
     boxsize_y = size(field, 2) * grid_spacing
     boxsize_z = size(field, 3) * grid_spacing
-    return InitialConditionsWebsky{T, LPT, C, AA}(
-        grid_spacing, cosmology, field, boxsize_x, boxsize_y, boxsize_z)
+    return InitialConditionsWebsky{T, LPT, C, AA, TL}(
+        cosmo, field, grid_spacing, boxsize_x, boxsize_y, boxsize_z)
 end
