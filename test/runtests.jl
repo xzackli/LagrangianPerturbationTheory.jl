@@ -20,7 +20,7 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     [+3.408854166666666e+02,+1.002604166666667e+02,+1.002604166666667e+02,+0,+0,+0,+8.738518980451039e-02,+8.512036581035365e-02]]
 
 ##
-@testset "lattice0" begin
+@testset "lattice_0" begin
     delta_array = LagrangianPerturbationTheory.load_example_ics()
     grid_spacing = 7700.0f0u"Mpc" / size(delta_array,1)
     cosmo = CCLCosmology(Float32;
@@ -31,25 +31,29 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     octants = (-1, 0)
     i=3; j=4; k=5
     counter = 1
-    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
-        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
-            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
+    for oi in octants, oj in octants, ok in octants
+        loc = lattice_location(delta, i, j, k, oi, oj, ok)
+        δ₁ = lattice_0(delta, loc)
+        @test [
+            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
+            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs1[counter]
         counter += 1
     end
 
     i=8; j=2; k=2
     counter = 1
-    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
-        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
-            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter]
+    for oi in octants, oj in octants, ok in octants
+        loc = lattice_location(delta, i, j, k, oi, oj, ok)
+        δ₁ = lattice_0(delta, loc)
+        @test [
+            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
+            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs2[counter]
         counter += 1
     end
 end
 
 ##
-@testset "lattice0 interpolated" begin
+@testset "lattice_0 interpolated" begin
     delta_array = LagrangianPerturbationTheory.load_example_ics()
     boxsize = 7700.0f0u"Mpc"
     grid_spacing = boxsize / size(delta_array,1)
@@ -63,19 +67,23 @@ end
 
     i=3; j=4; k=5
     counter = 1
-    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
-        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
-            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs1[counter]
+    for oi in octants, oj in octants, ok in octants
+        loc = lattice_location(delta, i, j, k, oi, oj, ok)
+        δ₁ = lattice_0(delta, loc)
+        @test [
+            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
+            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs1[counter]
         counter += 1
     end
 
     i=8; j=2; k=2
     counter = 1
-    for i_oct_x in octants, i_oct_y in octants, i_oct_z in octants
-        x, y, z, a, δ₁ = lattice0(delta, i, j, k, i_oct_x, i_oct_y, i_oct_z)
-        @test [ustrip(u"Mpc", x), ustrip(u"Mpc", y), ustrip(u"Mpc", z), 
-            i_oct_x, i_oct_y, i_oct_z, δ₁, 1/a-1] ≈ refs2[counter] rtol=1e-7
+    for oi in octants, oj in octants, ok in octants
+        loc = lattice_location(delta, i, j, k, oi, oj, ok)
+        δ₁ = lattice_0(delta, loc)
+        @test [
+            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
+            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs2[counter] rtol=1e-7
         counter += 1
     end
 end

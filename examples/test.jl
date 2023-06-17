@@ -1,6 +1,6 @@
 using LagrangianPerturbationTheory, Unitful, UnitfulAstro, HDF5
 
-ccl = CCLCosmology(Float64;
+ccl = CCLCosmology(Float32;
     Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
     n_s=0.9667, transfer_function="boltzmann_camb")
 cosmo = InterpolatedCosmology(ccl)
@@ -16,4 +16,5 @@ grid_spacing = 7700.0f0u"Mpc" / size(delta_array,1)
 
 ##
 
-scale_factor_of_chi(cosmo, 1.f0u"Mpc")
+loc = lattice_location(δ₀, 3, 4, 5, 0, 0, 0)
+δ₁ = lattice_0(δ₀, 3, 4, 5, 0, 0, 0)

@@ -11,6 +11,6 @@ include("lpt.jl")
 
 export FirstOrderLPT, InitialConditionsWebsky
 export CCLCosmology, InterpolatedCosmology, scale_factor_of_chi, growth_factor
-export lattice0
+export lattice_0, lattice_location
 
 end
