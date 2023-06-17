@@ -40,7 +40,6 @@ struct InterpolatedCosmology{T, ITP}
 end
 
 function InterpolatedCosmology(T, cosmology; amin=0.004, amax=1.0, N_grid=2048)
-
     agrid = LinRange(T(amin), T(amax), N_grid)
     growth_factor_grid = T[growth_factor(cosmology, a) for a in agrid]
 

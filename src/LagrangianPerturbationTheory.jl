@@ -9,6 +9,8 @@ include("read_ics.jl")
 
 
 
-export CCLCosmology
+export FirstOrderLPT, InitialConditionsWebsky
+export CCLCosmology, InterpolatedCosmology, scale_factor_of_chi, growth_factor
+export lattice_value
 
 end

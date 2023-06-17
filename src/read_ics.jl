@@ -13,7 +13,7 @@ end
 """
 octants are indexed -1 and 0
 """
-function lptcell(lpt::FirstOrderLPTWebsky{T}, i, j, k, octant_i, octant_j, octant_k) where T
+function lattice_value(lpt::InitialConditionsWebsky{T}, i, j, k, octant_i, octant_j, octant_k) where T
 
     x = (i+T(0.5)) * lpt.grid_spacing + octant_i * lpt.boxsize_x
     y = (j+T(0.5)) * lpt.grid_spacing + octant_j * lpt.boxsize_y
