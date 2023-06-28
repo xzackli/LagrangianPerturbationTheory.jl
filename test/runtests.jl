@@ -33,10 +33,10 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     counter = 1
     for oi in octants, oj in octants, ok in octants
         loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = lattice_0(delta, loc)
+        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
         @test [
             ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs1[counter]
+            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs1[counter]
         counter += 1
     end
 
@@ -44,10 +44,10 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     counter = 1
     for oi in octants, oj in octants, ok in octants
         loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = lattice_0(delta, loc)
+        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
         @test [
             ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs2[counter]
+            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs2[counter]
         counter += 1
     end
 end
@@ -69,10 +69,10 @@ end
     counter = 1
     for oi in octants, oj in octants, ok in octants
         loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = lattice_0(delta, loc)
+        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
         @test [
             ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs1[counter]
+            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs1[counter]
         counter += 1
     end
 
@@ -80,10 +80,10 @@ end
     counter = 1
     for oi in octants, oj in octants, ok in octants
         loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = lattice_0(delta, loc)
+        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
         @test [
             ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.scale_factor-1] ≈ refs2[counter] rtol=1e-7
+            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs2[counter] rtol=1e-7
         counter += 1
     end
 end
