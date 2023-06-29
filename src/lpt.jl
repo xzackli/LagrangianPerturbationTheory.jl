@@ -12,6 +12,8 @@ function wavevectors3D(T::Type{<:Real}, dims, box_size=(2π, 2π, 2π))
     return kx, ky, kz
 end
 
+
+# this is really a reference implementation, should use rfft
 function lpt(::FirstOrderFFTLPT, δᵢₙᵢ::AbstractArray{T,3}, kv::NTuple) where T
     kxs, kys, kzs = kv
     ℱϕ⁽¹⁾ = fft(δᵢₙᵢ)
@@ -25,7 +27,7 @@ function lpt(::FirstOrderFFTLPT, δᵢₙᵢ::AbstractArray{T,3}, kv::NTuple) wh
             for iz in eachindex(kzs)
                 kz = kzs[iz]
                 k² = kx²_plus_ky² + kz^2
-                if k² > 0  # will branch predict so this is fine
+                if k² > 0
                     im_ℱϕ⁽¹⁾_over_k² = im * ℱϕ⁽¹⁾[ix,iy,iz] / k²
                     bx[ix,iy,iz] = im_ℱϕ⁽¹⁾_over_k² * kx
                     by[ix,iy,iz] = im_ℱϕ⁽¹⁾_over_k² * ky

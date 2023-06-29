@@ -21,69 +21,89 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
 
 ##
 @testset "lattice_0" begin
-    delta_array = LagrangianPerturbationTheory.load_example_ics()
-    grid_spacing = 7700.0f0u"Mpc" / size(delta_array,1)
+    
+    delta_array = (LagrangianPerturbationTheory.load_example_ics())
+    delta_array = permutedims(delta_array, (3,2,1))
+    grid_spacing = 7700.f0u"Mpc" / size(delta_array,1)
+    box_sizes = (7700.f0u"Mpc", 7700.f0u"Mpc", 7700.f0u"Mpc")
+    offset = grid_spacing / 2
+    nx, ny, nz = size(delta_array)  # make a grid for each Lagrangian coordinate
+    q_axes = (LinRange(offset, offset + (nx - 1) * grid_spacing, nx),
+              LinRange(offset, offset + (ny - 1) * grid_spacing, ny),
+              LinRange(offset, offset + (nz - 1) * grid_spacing, nz))
     cosmo = CCLCosmology(Float32;
         Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
         n_s=0.9667, transfer_function="boltzmann_camb")
-    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmo, delta_array)
+    grid = LagrangianGridWebsky(cosmo, grid_spacing, box_sizes, q_axes)
+    δ₀ = ICFieldWebsky(FirstOrderLPT, grid, delta_array)
 
     octants = (-1, 0)
     i=3; j=4; k=5
     counter = 1
     for oi in octants, oj in octants, ok in octants
-        loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
+        𝐪 = lagrangian_coordinate(grid, i, j, k, oi, oj, ok)
+        a = scale_factor(grid, 𝐪)  # a(𝐪) depends on normalization of grid
+        D = growth_factor(cosmo, a)
+        δ⁽¹⁾ᴸ = D * δ₀[𝐪]
         @test [
-            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs1[counter]
+            ustrip(u"Mpc", 𝐪.x), ustrip(u"Mpc", 𝐪.y), ustrip(u"Mpc", 𝐪.z), 
+            oi, oj, ok, δ⁽¹⁾ᴸ, 1/a-1] ≈ refs1[counter]
         counter += 1
     end
 
     i=8; j=2; k=2
     counter = 1
     for oi in octants, oj in octants, ok in octants
-        loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
+        𝐪 = lagrangian_coordinate(grid, i, j, k, oi, oj, ok)
+        a = scale_factor(grid, 𝐪)  # a(𝐪) depends on normalization of grid
+        D = growth_factor(cosmo, a)
+        δ⁽¹⁾ᴸ = D * δ₀[𝐪]
         @test [
-            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs2[counter]
+            ustrip(u"Mpc", 𝐪.x), ustrip(u"Mpc", 𝐪.y), ustrip(u"Mpc", 𝐪.z), 
+            oi, oj, ok, δ⁽¹⁾ᴸ, 1/a-1] ≈ refs2[counter]
         counter += 1
     end
 end
 
-##
-@testset "lattice_0 interpolated" begin
-    delta_array = LagrangianPerturbationTheory.load_example_ics()
-    boxsize = 7700.0f0u"Mpc"
-    grid_spacing = boxsize / size(delta_array,1)
-    cosmo_pyccl = CCLCosmology(Float32;
-        Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
-        n_s=0.9667, transfer_function="boltzmann_camb")
-    amin = scale_factor_of_chi(cosmo_pyccl, √(3) * boxsize)
-    cosmo = InterpolatedCosmology(cosmo_pyccl, amin=amin)
-    delta = InitialConditionsWebsky(FirstOrderLPT, grid_spacing, cosmo, delta_array)
-    octants = (-1, 0)
 
-    i=3; j=4; k=5
-    counter = 1
-    for oi in octants, oj in octants, ok in octants
-        loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
-        @test [
-            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs1[counter]
-        counter += 1
-    end
+## todo turn into test: periodicity
 
-    i=8; j=2; k=2
-    counter = 1
-    for oi in octants, oj in octants, ok in octants
-        loc = lattice_location(delta, i, j, k, oi, oj, ok)
-        δ₁ = growth_factor(cosmo, loc.a) * lattice_0(delta, loc)
-        @test [
-            ustrip(u"Mpc", loc.x), ustrip(u"Mpc", loc.y), ustrip(u"Mpc", loc.z), 
-            oi, oj, ok, δ₁, 1/loc.a-1] ≈ refs2[counter] rtol=1e-7
-        counter += 1
-    end
-end
+# ##
+# delta_array = LagrangianPerturbationTheory.load_example_ics()
+# grid_spacing = 7700.0f0u"Mpc" / size(delta_array,1)
+# box_sizes = (7700.0f0u"Mpc", 7700.0f0u"Mpc", 7700.0f0u"Mpc")
+# offset = grid_spacing / 2
+
+# # make a grid for each Lagrangian coordinate
+# q_axes = (LinRange(offset, box_sizes[1] + offset, size(delta_array, 1)),
+#            LinRange(offset, box_sizes[2] + offset, size(delta_array, 2)),
+#            LinRange(offset, box_sizes[3] + offset, size(delta_array, 3)))
+# cosmo = CCLCosmology(Float32;
+#     Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
+#     n_s=0.9667, transfer_function="boltzmann_camb")
+# lgrid = LagrangianGridWebsky(cosmo, grid_spacing, box_sizes, q_axes)
+
+# δ₀ = ICFieldWebsky(FirstOrderLPT, lgrid, delta_array)
+
+# ys = [δ₀[ LagrangianCoordinate(offset, offset, offset + box_sizes[1] - i * grid_spacing) ] for i in 0:10]
+
+# ##
+# plt.clf()
+# plt.plot( delta_array[1,1,192:-1:182] )
+# plt.plot( ys )
+# plt.gcf()
+
+
+# ##
+
+
+# ys = [δ₀[ LagrangianCoordinate(offset, offset, offset + (i) * grid_spacing) ] for i in -2:0.1f0:2]
+
+
+# ##
+# plt.clf()
+# plt.plot( ys)
+# # plt.plot( ys )
+# plt.gcf()
+
+

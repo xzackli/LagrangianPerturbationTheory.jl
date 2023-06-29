@@ -50,18 +50,18 @@ function CCLCosmology(::Type{T}; kwargs...) where T
 end
 
 
-growth_factor(c::CCLCosmology{T}, a) where T = 
+growth_factor(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.growth_factor(c.p, a))
-scale_factor_of_chi(c::CCLCosmology{T}, chi) where T = 
+scale_factor_of_chi(c::CCLCosmology{T}, chi::Quantity) where T = 
     pyconvert(T, pyccl.background.scale_factor_of_chi(c.p, ustrip(u"Mpc", chi)))
 
-angular_diameter_distance(c::CCLCosmology{T}, a) where T = 
+angular_diameter_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.angular_diameter_distance(c.p, a))
-luminosity_distance(c::CCLCosmology{T}, a) where T = 
+luminosity_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.luminosity_distance(c.p, a))
-comoving_radial_distance(c::CCLCosmology{T}, a) where T = 
+comoving_radial_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.comoving_radial_distance(c.p, a)) * 1u"Mpc"
-h_over_h0(c::CCLCosmology{T}, a) where T = 
+h_over_h0(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.h_over_h0(c.p, a))
 
 struct InterpolatedCosmology{T, ITP1, ITP2}  <: AbstractCosmologyBackground{T}
@@ -102,8 +102,8 @@ function InterpolatedCosmology(cosmo::AbstractCosmologyBackground{T};
         growth_factor_itp, scale_factor_of_chi_itp)
 end
 
-growth_factor(c::InterpolatedCosmology, a) = c.growth_factor(a)
-scale_factor_of_chi(c::InterpolatedCosmology, chi) = c.scale_factor_of_chi(chi)
+growth_factor(c::InterpolatedCosmology, a::Real) = c.growth_factor(a)
+scale_factor_of_chi(c::InterpolatedCosmology, chi::Quantity) = c.scale_factor_of_chi(chi)
 
 
 

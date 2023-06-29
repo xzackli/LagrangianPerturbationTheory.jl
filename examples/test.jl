@@ -1,7 +1,7 @@
 using LagrangianPerturbationTheory, Unitful, UnitfulAstro, HDF5, PoissonRandom
 using QuadGK
 icdir = "/fs/lustre/scratch/zack/ICs/"
-files = (den=joinpath(icdir, "Fvec_7700Mpc_n6144_nb30_nt16_no192.h5"),
+files = (den=joinpath(icdir, "Fvec_7700Mpc_n6144_nb30_nt16_no768.h5"),
          sx=joinpath(icdir, "sx1_7700Mpc_n6144_nb30_nt16_no768.h5"),
          sy=joinpath(icdir, "sy1_7700Mpc_n6144_nb30_nt16_no768.h5"),
          sz=joinpath(icdir, "sz1_7700Mpc_n6144_nb30_nt16_no768.h5"))
@@ -25,36 +25,27 @@ xv = h5open(joinpath(icdir, "sx1_7700Mpc_n6144_nb30_nt16_no768.h5"), "r") do f r
 
 N = 768
 
-# xv = permutedims(xv, (1,3,2))
-plt.imshow(xv[10:60, 10:60, 4])
-# plt.imshow(Ψ₀_y.field[20:60, 20:60,  4])
-plt.colorbar()
-plt.gcf()
-
-
-
 ##
 
-𝐪 = lattice_location(δ₀, 3, 4, 5, 0, 0, 0)  # coordinate and inds
-D = growth_factor(cosmo, 𝐪.a)
-𝚿⁽¹⁾₀ = (Ψ₀_x[𝐪], Ψ₀_y[𝐪], Ψ₀_z[𝐪]) .* u"Mpc"
-δ⁽¹⁾₀ = δ₀[𝐪]
+# 𝐪 = lattice_location(δ₀, 3, 4, 5, 0, 0, 0)  # coordinate and inds
+# D = growth_factor(cosmo, 𝐪.a)
+# 𝚿⁽¹⁾₀ = (Ψ₀_x[𝐪], Ψ₀_y[𝐪], Ψ₀_z[𝐪]) .* u"Mpc"
+# δ⁽¹⁾₀ = δ₀[𝐪]
 
 # 1LPT solution, 𝐱 = 𝐪 .+ D .* 𝚿⁽¹⁾₀
-δ⁽¹⁾ᴸ = D * δ⁽¹⁾₀
+# δ⁽¹⁾ᴸ = D * δ⁽¹⁾₀
 
 
-M₁, M₂ = 12.0f0, 12.1f0
-
+# M₁, M₂ = 12.0f0, 12.1f0
 # integrate hmf to get n̄ of redshift
-n̄ = 0.0001f0 / 1u"Mpc^3"
-b⁽¹⁾ᴱ = 3.0  # tinker
-b⁽¹⁾ᴸ = b⁽¹⁾ᴱ - 1
+# n̄ = 0.0001f0 / 1u"Mpc^3"
+# b⁽¹⁾ᴱ = 3.0  # tinker
+# b⁽¹⁾ᴸ = b⁽¹⁾ᴱ - 1
 
 N = pois_rand(n̄ * (1 + b⁽¹⁾ᴸ * δ⁽¹⁾ᴸ) * dV)
 
 ##
-massdef = CCLMassDef(200, "critical")
+massdef = CCLMassDef(200, "matter")
 hmf = CCLMassFuncTinker08(ccl, massdef)
 
 ##
@@ -80,8 +71,20 @@ using QuadGK
 integral, err = quadgk(m -> dndlogm(hmf, m, 1.0), 11.0, 11.1, rtol=1e-8)
 
 ##
+struct TophatTracerBin{T, MT, BT}
+    nbar::T              # object density
+    M_min::MT            # top-hat bin mass minimum
+    M_max::MT            # top-hat bin mass maximum
+    bias_lagrangian::BT  # lagrangian bias
+end
 
-n̄, n̄_err = quadgk(m -> dndm(hmf, m, 1.0), (10.0^11.0)u"Msun", (10.0^11.1)u"Msun", rtol=1e-8)
+##
+M_min, M_max = (10.0^11.0)u"Msun", (10.0^11.1)u"Msun"
+n̄, n̄_err = quadgk(m -> dndm(hmf, m, 1.0), M_min, M_max, rtol=1e-8)
+b⁽¹⁾ᴱ = halo_bias(tinker10, 1e7u"Msun", 1.0)  # tinker
+b⁽¹⁾ᴸ = b⁽¹⁾ᴱ - 1
+ttb = TophatTracerBin(n̄, M_min, M_max)
+
 
 ##
 
@@ -109,10 +112,7 @@ plt.gcf()
 
 ##
 using StaticArrays
-
-
 # i=3; j=4; k=5
-
 
 # integrate hmf to get n̄ of redshift\
 b⁽¹⁾ᴱ = halo_bias(tinker10, 1e7u"Msun", 1.0)  # tinker
@@ -141,13 +141,11 @@ random_cell_position(qx, qy, qz, Δx) where T =
 function draw_tracer(δ₀::IC, Ψ₀_x::IC, Ψ₀_y::IC, Ψ₀_z::IC, dV, n̄, b⁽¹⁾ᴸ) where {
         T, LPT, C, AA, TL, IC<:InitialConditionsWebsky{T, LPT, C, AA, TL}}
 
-    # octants = (-1, 0)
+    cosmo = δ₀.cosmo
     nx, ny, nz = size(δ₀.field, 1), size(δ₀.field, 2), size(δ₀.field, 3)
-    octants = (0,)
-    nx, ny, nz = 20, 20, 4
+    octants = (-1, 0)
     halos = SVector{3, TL}[]
-    # for k in 0:(nz-1), j in 0:(ny-1), i in 0:(nx-1)
-    for k in 10:60, j in 10:60, i in 10:32
+    for k in 0:(nz-1), j in 0:(ny-1), i in 0:(nx-1)
         for oi in octants, oj in octants, ok in octants
             𝐪 = lattice_location(δ₀, i, j, k, oi, oj, ok)
             D = growth_factor(δ₀.cosmo, 𝐪.a)
