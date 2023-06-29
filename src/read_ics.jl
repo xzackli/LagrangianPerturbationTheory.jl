@@ -11,7 +11,7 @@ function load_example_ics()
         read(file, "delta")
     end
     # uploaded data was reversed from what it should be
-    return permutedims(delta_array, (3,2,1))  
+    return permutedims(delta, (3,2,1))  
 end
 
 # redshift = 1 / scale_factor - 1
