@@ -23,7 +23,6 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
 @testset "lattice_0" begin
     
     delta_array = (LagrangianPerturbationTheory.load_example_ics())
-    delta_array = permutedims(delta_array, (3,2,1))
     grid_spacing = 7700.f0u"Mpc" / size(delta_array,1)
     box_sizes = (7700.f0u"Mpc", 7700.f0u"Mpc", 7700.f0u"Mpc")
     offset = grid_spacing / 2
