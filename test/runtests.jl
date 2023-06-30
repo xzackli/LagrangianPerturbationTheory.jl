@@ -21,7 +21,6 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
 
 ##
 @testset "lattice_0" begin
-    
     delta_array = (LagrangianPerturbationTheory.load_example_ics())
     grid_spacing = 7700.f0u"Mpc" / size(delta_array,1)
     box_sizes = (7700.f0u"Mpc", 7700.f0u"Mpc", 7700.f0u"Mpc")
@@ -37,7 +36,7 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
     δ₀ = ICFieldWebsky(FirstOrderLPT, grid, delta_array)
 
     octants = (-1, 0)
-    i=3; j=4; k=5
+    i=3+1; j=4+1; k=5+1
     counter = 1
     for oi in octants, oj in octants, ok in octants
         𝐪 = lagrangian_coordinate(grid, i, j, k, oi, oj, ok)
@@ -50,7 +49,7 @@ const refs2 = [[-7.359114583333333e+03,-7.599739583333333e+03,-7.599739583333333
         counter += 1
     end
 
-    i=8; j=2; k=2
+    i=8+1; j=2+1; k=2+1
     counter = 1
     for oi in octants, oj in octants, ok in octants
         𝐪 = lagrangian_coordinate(grid, i, j, k, oi, oj, ok)
@@ -84,7 +83,7 @@ end
 
 # δ₀ = ICFieldWebsky(FirstOrderLPT, lgrid, delta_array)
 
-# ys = [δ₀[ LagrangianCoordinate(offset, offset, offset + box_sizes[1] - i * grid_spacing) ] for i in 0:10]
+# ys = [δ₀[ SVector(offset, offset, offset + box_sizes[1] - i * grid_spacing) ] for i in 0:10]
 
 # ##
 # plt.clf()
@@ -96,7 +95,7 @@ end
 # ##
 
 
-# ys = [δ₀[ LagrangianCoordinate(offset, offset, offset + (i) * grid_spacing) ] for i in -2:0.1f0:2]
+# ys = [δ₀[ SVector(offset, offset, offset + (i) * grid_spacing) ] for i in -2:0.1f0:2]
 
 
 # ##

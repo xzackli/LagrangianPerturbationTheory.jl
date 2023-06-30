@@ -19,7 +19,7 @@ box_size = 7700
 kv = wavevectors3D(Float32, size(δ₀), box_size)
 
 ##
-@time ϕ⁽¹⁾ᵢₙᵢ = lpt(FirstOrderFFTLPT(), δ₀, kv)
+@time ϕ⁽¹⁾ᵢₙᵢ = lpt(FirstOrderLPT(), δ₀, kv)
 
 sx = permutedims(ϕ⁽¹⁾ᵢₙᵢ[1], (3,2,1))
 sy = permutedims(ϕ⁽¹⁾ᵢₙᵢ[2], (3,2,1))

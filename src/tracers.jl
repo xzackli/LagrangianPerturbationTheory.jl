@@ -1,100 +1,82 @@
 
-abstract type AbstractLPT end
-struct FirstOrderLPT <: AbstractLPT end
-
-abstract type AbstractLagrangianGrid end
-struct LagrangianGridWebsky{T,TL,C,R} <: AbstractLagrangianGrid 
-    cosmo::C
-    grid_spacing::TL
-    box_sizes::NTuple{3,TL}
-    q_axes::NTuple{3,R}  # axis grids for each Lagrangian coordinate
+"""
+Octants are indexed -1 and 0.
+"""
+function draw_tracer!(halo_positions, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿⁽¹⁾₀, tracer, 
+                      i_range, j_range, k_range, octant) where {T, LPT, TL}
+    grid, cosmo = δ₀.grid, δ₀.grid.cosmo
+    oi, oj, ok = octant
+    for k in k_range, j in j_range, i in i_range
+        𝐪 = lagrangian_coordinate(grid, i, j, k, oi, oj, ok)  # Lagrangian 𝐪 of cell
+        a = scale_factor(grid, 𝐪)           # grid normalization gives you a(𝐪)
+        if tracer.a_min ≤ a ≤ tracer.a_max
+            D = growth_factor(cosmo, a)         # growth factor at grid cell
+            n̄ = mean_density(tracer, a)         # mean tracer density at cell center
+            b⁽¹⁾ᴸ = bias_lagrangian(tracer, a)  # Lagrangian bias at cell center
+            δ⁽¹⁾ᴸ = D * δ₀[𝐪]                   # Lagrangian density at grid cell
+            N = pois_rand(n̄ * (1 + b⁽¹⁾ᴸ * δ⁽¹⁾ᴸ) * grid.dV)  # find N to Poisson draw
+            for _ in 1:N                        # now generate N halos
+                𝐪ₕ = random_position_in_cell(grid, 𝐪) # randomly distribute halo in cell
+                𝚿⁽¹⁾ₕ = 𝚿⁽¹⁾₀[𝐪ₕ]               # interpolate the displacement
+                aₕ = scale_factor(grid, 𝐪ₕ)     # a(𝐪) depends on grid normalization
+                Dₕ = growth_factor(cosmo, aₕ)   # growth factor at the random 𝐪ₕ in cell
+                𝐱ₕ = 𝐪ₕ + Dₕ * 𝚿⁽¹⁾ₕ            # halo Eulerian position
+                push!(halo_positions, SVector(𝐱ₕ.x, 𝐱ₕ.y, 𝐱ₕ.z))
+            end
+        end
+    end
 end
 
-function LagrangianGridWebsky(cosmo::C, grid_spacing::TL, 
-        box_sizes, q_axes::NTuple{3,R}) where {T, C, R, TL<:Quantity{T}}
-    LagrangianGridWebsky{T,TL,C,R}(cosmo, grid_spacing, box_sizes, q_axes)
+const FULL_WEBSKY_OCTANTS = (
+    (-1,-1,-1), (-1,-1,0), (-1,0,-1), (-1,0,0), (0,-1,-1), (0,-1,0), (0,0,-1), (0,0,0))
+
+draw_tracer!(halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer) = draw_tracer!(
+    halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer, 
+    axes(δ₀.field,1), axes(δ₀.field,2), axes(δ₀.field,3), FULL_WEBSKY_OCTANTS)
+
+struct TopHatMassBinTracer{T, MT, ITP1 <: AbstractInterpolation, ITP2 <: AbstractInterpolation}
+    a_min::T
+    a_max::T
+    M_min::MT              # top-hat bin mass minimum
+    M_max::MT              # top-hat bin mass maximum
+    density::ITP1             # object density
+    bias_lagrangian::ITP2  # lagrangian bias
 end
 
-struct LagrangianCoordinate{T}
-    x::T
-    y::T
-    z::T
+function build_massfunc_interpolator(hmf::MassFunc, a_grid, M_min, M_max, rtol=1e-6,
+                                    interp_type=BSpline(Cubic(Line(OnGrid()))))
+    nbar_grid = [
+        quadgk(m -> dndm(hmf, m, a), M_min, M_max, rtol=rtol)[1] for a in a_grid]
+    zero_val = zero(nbar_grid[begin])
+    return extrapolate(scale(interpolate(nbar_grid, interp_type), a_grid), zero_val)
 end
 
-function lagrangian_coordinate(grid, i, j, k, oi, oj, ok)
-    Δq = grid.grid_spacing
-    offset = Δq / 2
-    box_size_x, box_size_y, box_size_z = grid.box_sizes
-    x = i * Δq + offset + oi * box_size_x
-    y = j * Δq + offset + oj * box_size_y
-    z = k * Δq + offset + ok * box_size_z
-    return LagrangianCoordinate(x, y, z)
-end
-
-# websky grid is normalized so that |𝐪| is comoving distance
-function scale_factor(grid::LagrangianGridWebsky, 𝐪::LagrangianCoordinate)
-    chi = √(𝐪.x^2 + 𝐪.y^2 + 𝐪.z^2)
-    return scale_factor_of_chi(grid.cosmo, chi)
-end
-
-random_number_in_cell(x, grid_spacing::Q) where {T, Q<:Quantity{T}} =
-    x + (rand() - T(1//2)) * grid_spacing
-random_number_in_cell(x, grid_spacing::T) where {T} =
-    x + (rand() - T(1//2)) * grid_spacing
-function random_position_in_cell(grid::AbstractLagrangianGrid, 𝐪)
-    Δq = grid.grid_spacing
-    return LagrangianCoordinate(
-        random_number_in_cell(𝐪.x, Δq), 
-        random_number_in_cell(𝐪.y, Δq), 
-        random_number_in_cell(𝐪.z, Δq))
+function build_lagrangian_bias_interpolator(hb::HaloBias, a_grid, M_min, M_max, 
+                                    interp_type=BSpline(Cubic(Line(OnGrid()))))
+    M̄ = sqrt(M_min * M_max)
+    nbar_grid = [halo_bias(hb, M̄, a) - 1 for a in a_grid]
+    return extrapolate(scale(interpolate(nbar_grid, interp_type), a_grid), Flat())
 end
 
 
-# chi = sqrt(x^2+y^2+z^2)
-# scale_factor = scale_factor_of_chi(ic.cosmo, chi)
-# return LatticeLocation(scale_factor, chi, x, y, z, i, j, k)
+function TopHatMassBinTracer(M_min, M_max, hmf::MassFunc, hb::HaloBias, a_grid)
+    nbar = build_massfunc_interpolator(hmf, a_grid, M_min, M_max)
+    lag_bias = build_lagrangian_bias_interpolator(hb, a_grid, M_min, M_max)
+    return TopHatMassBinTracer(
+        minimum(a_grid), maximum(a_grid), M_min, M_max, nbar, lag_bias)
+end
+
+mean_density(tracer::TopHatMassBinTracer, a::Real) = tracer.density(a)
+bias_lagrangian(tracer::TopHatMassBinTracer, a::Real) = tracer.bias_lagrangian(a)
 
 
-# struct LatticeLocation{T,LT}
-#     x::LT     # first lagrangian coordinate
-#     y::LT     # second lagrangian coordinate
-#     z::LT     # third lagrangian coordinate
-#     i::Int    # array index for parent
-#     j::Int    # array index for parent
-#     k::Int    # array index for parent
+
+# function draw_tracer_threaded(δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, tracer) where {T, LPT, TL}
+#     halo_positions_per_thread = [SVector{3, TL}[] for _ in 1:Threads.nthreads()]
+#     Threads.@threads :static for oct in FULL_WEBSKY_OCTANTS
+#         halo_positions = halo_positions_per_thread[Threads.threadid()]
+#         draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, 
+#             axes(δ₀.field,1), axes(δ₀.field,2), axes(δ₀.field,3), )
+#     end
+#     return reduce(vcat, halo_positions_per_thread)
 # end
-
-
-struct ICFieldWebsky{T, LPT, AA, G, QITP}
-    grid::G
-    field::AA
-    lagrangian_interp::QITP  # access field with Lagrangian coordinate 𝐪
-end
-
-
-
-"""
-    ICFieldWebsky(::Type{LPT}, grid_spacing, cosmo, field)
-
-Returns a wrapper around an array `field` in Lagrangian coordinates, defined by 
-a kind of Lagrangian perturbation theory `LPT`, grid spacing, and cosmo. For 
-Websky, this kind of field is typically something like ``\\delta_0(\\vec{q})``, 
-the Lagrangian density at ``z=0``.
-"""
-function ICFieldWebsky(::Type{LPT}, grid::G, 
-        field::AA, interp_type=BSpline(Quadratic(Periodic(OnCell())))
-        ) where {T, TL, LPT, AA, G<:LagrangianGridWebsky{T,TL}}
-
-    itp = interpolate(field, interp_type)
-    sitp = scale(itp, grid.q_axes...)
-    
-    return ICFieldWebsky{T, LPT, AA, G, typeof(sitp)}(
-        grid, field, sitp)
-end
-
-function getindex(ic::ICFieldWebsky{T}, 𝐪::LagrangianCoordinate{LT}) where {T, LT}
-    x = 𝐪.x ≥ zero(LT) ? 𝐪.x : (𝐪.x + ic.grid.box_sizes[1])
-    y = 𝐪.y ≥ zero(LT) ? 𝐪.y : (𝐪.y + ic.grid.box_sizes[2])
-    z = 𝐪.z ≥ zero(LT) ? 𝐪.z : (𝐪.z + ic.grid.box_sizes[3])
-    return T(ic.lagrangian_interp(x, y, z))
-end

@@ -1,8 +1,7 @@
 
-
-abstract type AbstractLPTImplementation end
-
-struct FirstOrderFFTLPT <: AbstractLPTImplementation end
+abstract type AbstractLPT end
+abstract type AbstractFirstOrderLPT <: AbstractLPT end
+struct FirstOrderLPT <: AbstractFirstOrderLPT end
 
 function wavevectors3D(T::Type{<:Real}, dims, box_size=(2π, 2π, 2π))
     sample_rate = T.(2π .* dims ./ box_size)
@@ -14,7 +13,7 @@ end
 
 
 # this is really a reference implementation, should use rfft
-function lpt(::FirstOrderFFTLPT, δᵢₙᵢ::AbstractArray{T,3}, kv::NTuple) where T
+function lpt(::FirstOrderLPT, δᵢₙᵢ::AbstractArray{T,3}, kv::NTuple) where T
     kxs, kys, kzs = kv
     ℱϕ⁽¹⁾ = fft(δᵢₙᵢ)
     bx, by, bz = similar(ℱϕ⁽¹⁾), similar(ℱϕ⁽¹⁾), similar(ℱϕ⁽¹⁾)
