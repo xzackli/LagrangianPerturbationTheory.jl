@@ -16,6 +16,7 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Background Cosmology" => "background_cosmology.md",
         "API" => "api.md"
     ],
 )

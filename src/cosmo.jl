@@ -50,18 +50,18 @@ function CCLCosmology(::Type{T}; kwargs...) where T
 end
 
 
-growth_factor(c::CCLCosmology{T}, a) where T = 
+growth_factor(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.growth_factor(c.p, a))
-scale_factor_of_chi(c::CCLCosmology{T}, chi) where T = 
+scale_factor_of_chi(c::CCLCosmology{T}, chi::Quantity) where T = 
     pyconvert(T, pyccl.background.scale_factor_of_chi(c.p, ustrip(u"Mpc", chi)))
 
-angular_diameter_distance(c::CCLCosmology{T}, a) where T = 
+angular_diameter_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.angular_diameter_distance(c.p, a))
-luminosity_distance(c::CCLCosmology{T}, a) where T = 
+luminosity_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.luminosity_distance(c.p, a))
-comoving_radial_distance(c::CCLCosmology{T}, a) where T = 
+comoving_radial_distance(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.comoving_radial_distance(c.p, a)) * 1u"Mpc"
-h_over_h0(c::CCLCosmology{T}, a) where T = 
+h_over_h0(c::CCLCosmology{T}, a::Real) where T = 
     pyconvert(T, pyccl.background.h_over_h0(c.p, a))
 
 struct InterpolatedCosmology{T, ITP1, ITP2}  <: AbstractCosmologyBackground{T}
@@ -83,7 +83,7 @@ cosmo = InterpolatedCosmology(cclcosmo)
 ```
 """
 function InterpolatedCosmology(cosmo::AbstractCosmologyBackground{T}; 
-                               amin=0.004, amax=1.0, N_grid=2048) where T
+                               amin=0.004, amax=1.0, N_grid=128) where T
     agrid = LinRange(T(amin), T(amax), N_grid)
     growth_factor_grid = T[growth_factor(cosmo, a) for a in agrid]
 
@@ -102,5 +102,62 @@ function InterpolatedCosmology(cosmo::AbstractCosmologyBackground{T};
         growth_factor_itp, scale_factor_of_chi_itp)
 end
 
-growth_factor(c::InterpolatedCosmology, a) = c.growth_factor(a)
-scale_factor_of_chi(c::InterpolatedCosmology, chi) = c.scale_factor_of_chi(chi)
+growth_factor(c::InterpolatedCosmology, a::Real) = c.growth_factor(a)
+scale_factor_of_chi(c::InterpolatedCosmology, chi::Quantity) = c.scale_factor_of_chi(chi)
+
+
+struct CCLMassDef
+    p::Py
+end
+
+function CCLMassDef(Δ, rho_type)
+    massdef = pyccl.halos.massdef.MassDef(Δ, rho_type)
+    return CCLMassDef(massdef)
+end
+
+struct MassFunc{T}
+    hmf::Py
+    cosmopy::Py
+end
+
+
+function CCLMassFuncTinker08(cosmo::CCLCosmology{T}, 
+        mass_def::CCLMassDef=CCLMassDef(200, "matter"), 
+        mass_def_strict=true) where T
+    return MassFunc{T}(
+        pyccl.halos.hmfunc.MassFuncTinker08(
+            cosmo.p, mass_def.p, mass_def_strict), cosmo.p)
+end
+
+
+"""
+as in pyccl, returns number density per Mpc³ per log₁₀(Mₕ/Msun)
+"""
+function dndlogm(hmf::MassFunc{T}, log₁₀M, scale_factor) where T
+    pyconvert(T, hmf.hmf.get_mass_function(
+        hmf.cosmopy, T(10)^log₁₀M, scale_factor)) * u"Mpc^(-3)"
+end
+
+function dndm(hmf::MassFunc{T}, mass, scale_factor) where T
+    pyconvert(T, hmf.hmf.get_mass_function(
+        hmf.cosmopy, ustrip(u"Msun", mass), scale_factor)) * u"Mpc^(-3)" / (
+            T(mass) * log(T(10))) 
+end
+
+
+struct HaloBias{T}
+    hb::Py
+    cosmopy::Py
+end
+
+function CCLHaloBiasTinker10(cosmo::CCLCosmology{T}, 
+        mass_def::CCLMassDef=CCLMassDef(200, "matter"), 
+        mass_def_strict=true) where T
+    return HaloBias{T}(pyccl.halos.hbias.HaloBiasTinker10(
+        cosmo.p, mass_def.p, mass_def_strict), cosmo.p)
+end
+
+function halo_bias(hb::HaloBias{T}, mass, scale_factor) where T
+    pyconvert(T, hb.hb.get_halo_bias(
+        hb.cosmopy, ustrip(u"Msun", mass), scale_factor))
+end
