@@ -30,9 +30,9 @@ end
 const FULL_WEBSKY_OCTANTS = (
     (-1,-1,-1), (-1,-1,0), (-1,0,-1), (-1,0,0), (0,-1,-1), (0,-1,0), (0,0,-1), (0,0,0))
 
-draw_tracer!(halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer) = draw_tracer!(
-    halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer, 
-    axes(δ₀.field,1), axes(δ₀.field,2), axes(δ₀.field,3), FULL_WEBSKY_OCTANTS)
+# draw_tracer!(halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer) = draw_tracer!(
+#     halo_positions, δ₀, 𝚿⁽¹⁾₀, tracer, 
+#     axes(δ₀.field,1), axes(δ₀.field,2), axes(δ₀.field,3), FULL_WEBSKY_OCTANTS)
 
 struct TopHatMassBinTracer{T, MT, ITP1 <: AbstractInterpolation, ITP2 <: AbstractInterpolation}
     a_min::T

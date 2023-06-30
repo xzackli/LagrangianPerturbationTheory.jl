@@ -17,40 +17,42 @@ bias_tinker10 = CCLHaloBiasTinker10(ccl, massdef)
 δ₀, 𝚿₀ = read_websky_ics(files.den, files.sx, files.sy, files.sz, cosmo, 7700.f0u"Mpc")
 
 ##
-function draw_tracer_threaded(δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, tracer) where {T, LPT, TL}
+function draw_tracer_threaded(δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, tracer, octant) where {T, LPT, TL}
     tasks = map(axes(δ₀.field,1)) do i
         Threads.@spawn begin
             halo_positions = SVector{3, TL}[]
             draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, 
-                i:i, axes(δ₀.field,2), axes(δ₀.field,3), (0,0,0))
+                i:i, axes(δ₀.field,2), axes(δ₀.field,3), octant)
             return halo_positions    # return one octant at a time
         end
     end
     return reduce(vcat, fetch.(tasks))
 end
 
-function save_halos(mass_range, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, 
-                    hmf, bias) where {T, LPT, TL}
-
-    mass_indices = 1:(length(mass_range)-1)
-    tracers = [TopHatMassBinTracer(
-        (10^mass_range[i_mass])u"Msun", (10^mass_range[i_mass+1])u"Msun", 
-        hmf, bias, 0.2f0:0.01f0:1f0) for i_mass in mass_indices]
-
+function save_halos(masses, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, hmf, bias) where {T, LPT, TL}
+    mass_indices = 1:(length(masses)-1)
+    tracers = [TopHatMassBinTracer((10^masses[iₘ])u"Msun", (10^masses[iₘ+1])u"Msun", 
+        hmf, bias, 0.2f0:0.01f0:1f0) for iₘ in mass_indices]
     for i_mass in mass_indices
         tracer = tracers[i_mass]
-        positions = draw_tracer_threaded(δ₀, 𝚿₀, tracer)
-        jldsave("/fs/lustre/scratch/zack/ICs/halos/lowres_positions_$(mass_range[i_mass])_$(mass_range[i_mass+1]).jld2"; 
-            positions)
+        tasks = map(LagrangianPerturbationTheory.FULL_WEBSKY_OCTANTS) do octant
+            Threads.@spawn draw_tracer_threaded(δ₀, 𝚿₀, tracer, octant)
+        end
+        positions = reduce(vcat, fetch.(tasks))
+        jldsave("/fs/lustre/scratch/zack/ICs/halos/" * 
+            "lowres_positions_$(masses[i_mass])_$(masses[i_mass+1]).jld2"; positions)
     end
 end
 
-save_halos(12:0.1f0:14, δ₀, 𝚿₀, hmf_tinker08, bias_tinker10)
+# @time save_halos(12:0.1f0:14, δ₀, 𝚿₀, hmf_tinker08, bias_tinker10)
+
+@time save_halos(11:0.05f0:12, δ₀, 𝚿₀, hmf_tinker08, bias_tinker10)
 
 ##
 
-
-jldsave("test.jld2"; x=0)
+        # for octant in LagrangianPerturbationTheory.FULL_WEBSKY_OCTANTS
+        #     append!(positions, draw_tracer_threaded(δ₀, 𝚿₀, tracer, octant))
+        # end
 
 ##
 
@@ -60,17 +62,17 @@ jldsave("test.jld2"; x=0)
 #     1:16, axes(δ₀.field,2), axes(δ₀.field,3))
 
 
-halo_positions = SVector{3, typeof(δ₀.grid.grid_spacing)}[]
-M_min, M_max = (10.0^12.0)u"Msun", (10.0^12.1)u"Msun"
-tracer = TopHatMassBinTracer(M_min, M_max, hmf_tinker08, bias_tinker10, 0.2f0:0.01f0:1.0f0)
-@time draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, 
-    1:2, axes(δ₀.field,2), axes(δ₀.field,3), (0,0,0))
+# halo_positions = SVector{3, typeof(δ₀.grid.grid_spacing)}[]
+# M_min, M_max = (10.0^12.0)u"Msun", (10.0^12.1)u"Msun"
+# tracer = TopHatMassBinTracer(M_min, M_max, hmf_tinker08, bias_tinker10, 0.2f0:0.01f0:1.0f0)
+# @time draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, 
+#     1:2, axes(δ₀.field,2), axes(δ₀.field,3), (0,0,0))
 
 
-# @profview draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, (-1, 0))
+# # @profview draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, (-1, 0))
 
 
-##
+# ##
 plt.clf()
 a_grid = 0.1:0.01:1.0
 plt.plot(a_grid, [ustrip(bias_lagrangian(tracer, a)) for a in a_grid] )
