@@ -85,7 +85,7 @@ function package_tracer_positions(
     for vv in vvv, v in vv
         total_number_of_elements += length(v)
     end
-    result = zeros(3, total_number_of_elements)
+    result = zeros(T, (3, total_number_of_elements))
     result_index = 1
     for vv in vvv, v in vv, p in v
         result[:, result_index] .= ustrip.(u"Mpc", p)

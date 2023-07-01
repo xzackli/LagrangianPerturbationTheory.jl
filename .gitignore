@@ -4,5 +4,5 @@
 /Manifest.toml
 /docs/Manifest.toml
 /docs/build/
-Manifest.toml
-.CondaPkg
+*Manifest.toml
+*.CondaPkg
