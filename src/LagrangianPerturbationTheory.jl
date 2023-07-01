@@ -21,7 +21,7 @@ export LagrangianGridWebsky, lagrangian_coordinate
 export CCLMassDef, CCLHaloBiasTinker10, dndlogm, dndm
 export CCLMassFuncTinker08, halo_bias, TopHatMassBinTracer
 export mean_density, bias_lagrangian
-export draw_tracer!
+export draw_tracer!, package_tracer_positions
 
 # utilities
 export read_websky_ics

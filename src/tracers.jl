@@ -70,13 +70,26 @@ mean_density(tracer::TopHatMassBinTracer, a::Real) = tracer.density(a)
 bias_lagrangian(tracer::TopHatMassBinTracer, a::Real) = tracer.bias_lagrangian(a)
 
 
+const VECLIKE = Base.AbstractVecOrTuple
 
-# function draw_tracer_threaded(δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, tracer) where {T, LPT, TL}
-#     halo_positions_per_thread = [SVector{3, TL}[] for _ in 1:Threads.nthreads()]
-#     Threads.@threads :static for oct in FULL_WEBSKY_OCTANTS
-#         halo_positions = halo_positions_per_thread[Threads.threadid()]
-#         draw_tracer!(halo_positions, δ₀, 𝚿₀, tracer, 
-#             axes(δ₀.field,1), axes(δ₀.field,2), axes(δ₀.field,3), )
-#     end
-#     return reduce(vcat, halo_positions_per_thread)
-# end
+"""
+    package_tracer_positions(vector_of_vectors_of_svector_positions)
+
+Convert a triply-nested linearly-indexed of SVector{3,Quantity{T}} 
+(unitful positions) into an Array{T,2} of (3, total_elements) to be stored to disk, 
+without units. Lengths are converted to Mpc.
+"""
+function package_tracer_positions(
+        vvv::V) where {T, Q<:Quantity{T}, V<:VECLIKE{VECLIKE{VECLIKE{SVector{3,Q}}}}}
+    total_number_of_elements = 0
+    for vv in vvv, v in vv
+        total_number_of_elements += length(v)
+    end
+    result = zeros(3, total_number_of_elements)
+    result_index = 1
+    for vv in vvv, v in vv, p in v
+        result[:, result_index] .= ustrip.(u"Mpc", p)
+        result_index += 1
+    end
+    return result
+end
