@@ -55,3 +55,5 @@ function save_multiple_masses(logmasses, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿�
     end
 end
 @time save_multiple_masses(masses, δ₀, 𝚿₀, hmf_tinker08, bias_tinker10, outdir)
+
+println("job finished!")
