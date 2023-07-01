@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Cosmology · LagrangianPerturbationTheory.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://xzackli.github.io/LagrangianPerturbationTheory.jl/cosmology/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">LagrangianPerturbationTheory.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Cosmology</a></li><li><a class="tocitem" href="../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Cosmology</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Cosmology</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/xzackli/LagrangianPerturbationTheory.jl/blob/main/docs/src/cosmology.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Cosmology-Calculations"><a class="docs-heading-anchor" href="#Cosmology-Calculations">Cosmology Calculations</a><a id="Cosmology-Calculations-1"></a><a class="docs-heading-anchor-permalink" href="#Cosmology-Calculations" title="Permalink"></a></h1><p>This package wraps the <a href="https://ccl.readthedocs.io/en/latest/">Core Cosmology Library (CCL)</a>  for calculations involving the background cosmology, halo mass functions, and halo bias. The wrapped functions provide (zero-cost, compile-time) physical units support. </p><p>To start, you&#39;ll need a basic CCL cosmology object.</p><pre><code class="language-julia hljs">using LagrangianPerturbationTheory, Unitful, UnitfulAstro
+
+cosmo_ccl = CCLCosmology(Float32;
+    Omega_c=0.2589, Omega_b=0.0486, h=0.6774, sigma8=0.8159,
+    n_s=0.9667, transfer_function=&quot;boltzmann_camb&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">CCLCosmology{Float32}(&lt;py &lt;pyccl.cosmology.Cosmology&gt;
+	Neff        = 3.046
+	Omega_b     = 0.0486
+	Omega_c     = 0.2589
+	bcm_etab    = 0.5
+	bcm_ks      = 55.0
+	bcm_log10Mc = 14.079181246047625
+	h           = 0.6774
+	n_s         = 0.9667
+	sigma8      = 0.8159
+	baryons_power_spectrum = nobaryons
+	halo_concentration     = duffy2008
+	mass_function          = tinker10
+	extra_parameters =
+		emu = {&#39;neutrinos&#39;: &#39;strict&#39;}
+	HASH_ACCURACY_PARAMS = 0xb013960ee6716a2f&gt;)</code></pre><p><strong>Wrapped CCL cannot be called in multithreaded mode.</strong> Do not use CCL objects in multithreaded code, as your program will likely immediately segfault. For high-performance code, you will want to use interpolators anyway:</p><pre><code class="language-julia hljs">cosmo = InterpolatedCosmology(cosmo_ccl)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">InterpolatedCosmology{Float32, Interpolations.Extrapolation{Float32, 1, Interpolations.ScaledInterpolation{Float32, 1, Interpolations.BSplineInterpolation{Float32, 1, OffsetArrays.OffsetVector{Float32, Vector{Float32}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Tuple{Base.OneTo{Int64}}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Tuple{LinRange{Float32, Int64}}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Interpolations.Throw{Nothing}}, Interpolations.Extrapolation{Float32, 1, Interpolations.ScaledInterpolation{Float32, 1, Interpolations.BSplineInterpolation{Float32, 1, OffsetArrays.OffsetVector{Float32, Vector{Float32}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Tuple{Base.OneTo{Int64}}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Tuple{LinRange{Unitful.Quantity{Float32, 𝐋, Unitful.FreeUnits{(Mpc,), 𝐋, nothing}}, Int64}}}, Interpolations.BSpline{Interpolations.Cubic{Interpolations.Line{Interpolations.OnGrid}}}, Interpolations.Throw{Nothing}}}(128-element extrapolate(scale(interpolate(OffsetArray(::Vector{Float32}, 0:129), BSpline(Cubic(Line(Interpolations.OnGrid())))), (LinRange{Float32}(0.004f0, 1.0f0, 128),)), Throw()) with element type Float32:
+ 0.0053554587
+ 0.015362108
+ 0.025368525
+ 0.035374768
+ 0.045380708
+ 0.055386182
+ 0.065390915
+ 0.07539465
+ 0.08539705
+ 0.095397756
+ ⋮
+ 0.96563077
+ 0.9701233
+ 0.97455853
+ 0.9789368
+ 0.98325896
+ 0.98752576
+ 0.99173784
+ 0.9958957
+ 1.0, 128-element extrapolate(scale(interpolate(OffsetArray(::Vector{Float32}, 0:129), BSpline(Cubic(Line(Interpolations.OnGrid())))), (LinRange{Unitful.Quantity{Float32, 𝐋, Unitful.FreeUnits{(Mpc,), 𝐋, nothing}}}(0.0f0 Mpc, 13438.126f0 Mpc, 128),)), Throw()) with element type Float32:
+ 1.0
+ 0.9765217
+ 0.9538685
+ 0.93199086
+ 0.91084206
+ 0.8903797
+ 0.87056434
+ 0.8513591
+ 0.8327307
+ 0.8146474
+ ⋮
+ 0.0137645975
+ 0.012236417
+ 0.010796115
+ 0.0094437115
+ 0.008179187
+ 0.0070025637
+ 0.005913819
+ 0.004912973
+ 0.004000007)</code></pre><p>Similarly, we provide wrapped CCL mass definitions and halo bias.</p><pre><code class="language- hljs">massdef = CCLMassDef(200, &quot;critical&quot;)
+
+dndm(hmf, 1e12u&quot;Msun&quot;, 1.0)  # scale factor = 1</code></pre><p>Let&#39;s take a look.</p><pre><code class="language- hljs">hmf = CCLMassFuncTinker08(cosmo_ccl, massdef)
+
+import PythonPlot; const plt = PythonPlot
+masses = 10 .^ (10:0.1:15) .* u&quot;Msun&quot;
+plt.close()
+plt.plot(ustrip.((u&quot;Msun&quot;,), masses),
+    [ustrip(u&quot;Mpc^(-3)* Msun^(-1)&quot;, dndm(hmf, m, 1.0)) for m in masses])
+plt.xlabel(raw&quot;Mass [$M_{\odot}$]&quot;)
+plt.ylabel(raw&quot;$dn/dM_h$ $[Mpc^{-3} M^{-1}_{\odot}]$&quot;)
+plt.xscale(&quot;log&quot;); plt.yscale(&quot;log&quot;)
+plt.gcf()</code></pre><pre><code class="language-julia hljs">tinker10 = CCLHaloBiasTinker10(cosmo_ccl, massdef)
+
+halo_bias(tinker10, 1e12u&quot;Msun&quot;, 1.0)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.84880763f0</code></pre><pre><code class="language- hljs">plt.close()
+plt.plot(ustrip.((u&quot;Msun&quot;,), masses),
+    [halo_bias(tinker10, m, 1.0) for m in masses], label=&quot;Tinker10&quot;)
+plt.xlabel(raw&quot;Mass [$M_{\odot}$]&quot;)
+plt.ylabel(raw&quot;$b_h(M)$&quot;)
+plt.xscale(&quot;log&quot;)
+plt.legend()
+plt.gcf()</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../api/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Saturday 1 July 2023 23:45">Saturday 1 July 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
