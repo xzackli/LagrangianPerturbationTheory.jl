@@ -103,3 +103,9 @@ function getindex(ics::DisplacementICFieldWebsky{IC},
         T(ics.sy.lagrangian_interp(x, y, z)), 
         T(ics.sz.lagrangian_interp(x, y, z)))
 end
+
+
+function Base.show(io::IO, ic::DisplacementICFieldWebsky{IC}) where {T, LPT, TL, AA, G, QITP, IC<:ICFieldWebsky{T, LPT, TL, AA, G, QITP}}
+    expr = "DisplacementICFieldWebsky containing \n ⋅ 3x ICFieldWebsky{$T, $LPT, $TL, $AA, ...}"
+    print(io, expr)
+end
