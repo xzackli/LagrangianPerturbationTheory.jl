@@ -6,7 +6,7 @@ masses = logM_min:ΔlogM:logM_max
 println("Processing $(length(masses)) masses in log₁₀(Mh/Msun) range: ", masses)
 println("Output directory: ", outdir)
 
-using LagrangianPerturbationTheory, Unitful, UnitfulAstro, StaticArrays, JLD2, FileIO
+using LagrangianPerturbationTheory, Unitful, UnitfulAstro, StaticArrays, JLD2, FileIO, Printf
 
 icdir = "/fs/lustre/scratch/zack/ICs/"
 files = (den=joinpath(icdir, "Fvec_7700Mpc_n6144_nb30_nt16_no768.h5"),

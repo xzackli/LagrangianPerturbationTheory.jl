@@ -1,5 +1,4 @@
-using LagrangianPerturbationTheory, Unitful, UnitfulAstro, HDF5, PoissonRandom, StaticArrays
-using BenchmarkTools, ThreadPools, JLD2, FileIO
+using LagrangianPerturbationTheory, Unitful, UnitfulAstro, StaticArrays, JLD2, FileIO, Printf
 import PythonPlot; const plt = PythonPlot
 icdir = "/fs/lustre/scratch/zack/ICs/"
 files = (den=joinpath(icdir, "Fvec_7700Mpc_n6144_nb30_nt16_no768.h5"),
@@ -44,8 +43,9 @@ function save_multiple_masses(logmasses, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿�
         hmf, bias, scale_factor_grid) for iₘ in mass_indices]
     for i_m in mass_indices
         tracer = tracers[i_m]
-        save_positions("/fs/lustre/scratch/zack/ICs/low_mass_halos/lowres_positions_" * 
-            "$(logmasses[i_m])_$(logmasses[i_m+1]).jld2", δ₀, 𝚿₀, tracer)
+        m_str = @sprintf("%.2f",logmasses[i_m]) * "_" * @sprintf("%.2f",logmasses[i_m+1])
+        save_positions("/fs/lustre/scratch/zack/ICs/low_mass_halos/" * 
+            "lowres_positions_$(m_str).jld2", δ₀, 𝚿₀, tracer)
         GC.gc(true); GC.gc(false)  # force full GC collection
     end
 end

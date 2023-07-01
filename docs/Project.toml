@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 LagrangianPerturbationTheory = "5e1607e4-5f4d-4e56-95bd-eafa9ef667dd"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
