@@ -22,7 +22,7 @@ for job_masses in partition(masses, masses_per_job)
 #PBS -l walltime=1:00:00
 #PBS -r n
 #PBS -j oe
-#PBS -q starq
+#PBS -q greenq
 
 # go to your working directory containing the batch script, code and data
 cd $workdir

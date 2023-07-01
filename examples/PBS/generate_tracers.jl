@@ -45,12 +45,13 @@ end
 
 function save_multiple_masses(logmasses, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, hmf, bias, outdir) where {T, LPT, TL}
     mass_indices = 1:(length(logmasses)-1)
+    scale_factor_grid = 0.2f0:0.01f0:1f0
     tracers = [TopHatMassBinTracer((10^logmasses[iₘ])u"Msun", (10^logmasses[iₘ+1])u"Msun", 
-        hmf, bias, 0.2f0:0.01f0:1f0) for iₘ in mass_indices]  # CANNOT BE THREADED
+        hmf, bias, scale_factor_grid) for iₘ in mass_indices]  # CANNOT BE THREADED
     for i_m in mass_indices
         tracer = tracers[i_m]
-        save_positions(joinpath(outdir, "lowres_positions_" * 
-            "$(logmasses[i_m])_$(logmasses[i_m+1]).jld2"), δ₀, 𝚿₀, tracer)
+        m_str = @sprintf("%.2f",logmasses[i_m]) * "_" * @sprintf("%.2f",logmasses[i_m+1])
+        save_positions(joinpath(outdir, "lowres_positions_$(m_str).jld2"), δ₀, 𝚿₀, tracer)
         GC.gc(true); GC.gc(false)  # force full GC collection
     end
 end
