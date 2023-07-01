@@ -52,7 +52,7 @@ end
 
 ##
 # mass_indices = 1:(length(11:0.05f0:12)-1)
-# tracer = TopHatMassBinTracer((10^12.4)u"Msun", (10^12.5)u"Msun", 
+# tracer = TopHatMassBinTracer((10^12.4f0)u"Msun", (10^12.5f0)u"Msun", 
 #     hmf_tinker08, bias_tinker10, 0.2f0:0.01f0:1f0)
 # ts = [draw_tracer_threaded(δ₀, 𝚿₀, tracer, (0,0,0))]
 # package_tracer_positions(ts)
