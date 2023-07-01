@@ -1,17 +1,18 @@
 using Base.Iterators: partition
+using Printf
 
 ΔlogM = 0.01f0
 masses = 11:ΔlogM:12
-
 masses_per_job = 10
-job_masses = collect(partition(masses, masses_per_job))[end-1]
-##
+# job_masses = collect(partition(masses, masses_per_job))
+
 outdir = "/fs/lustre/scratch/zack/ICs/low_mass_halos/"
 workdir = "/fs/lustre/cita/zack/jl/dev/LagrangianPerturbationTheory/examples/PBS/"
+mkpath(outdir)
 mkpath(joinpath(outdir, "scripts"))
 
 for job_masses in partition(masses, masses_per_job)
-    logMmin, logMmax = minimum(job_masses), maximum(job_masses)
+    logMmin, logMmax = minimum(job_masses), maximum(job_masses) + ΔlogM  # inclusive
     PBS_script = """
     #!/bin/bash -l
     #PBS -l nodes=1:ppn=32
@@ -27,7 +28,8 @@ for job_masses in partition(masses, masses_per_job)
     julia --project=. -t 32 generate_tracers.jl $logMmin $logMmax $ΔlogM $outdir
     """
 
-    scriptfile = joinpath(outdir, "scripts", "job_$(logMmin)_$(logMmax).pbs")
+    mass_string = @sprintf("%.2f",logMmin) * "_" * @sprintf("%.2f",logMmax)
+    scriptfile = joinpath(outdir, "scripts", "job_$(mass_string).pbs")
     open(scriptfile, "w") do file write(file, PBS_script) end
     run(`qsub $scriptfile`)
 end
