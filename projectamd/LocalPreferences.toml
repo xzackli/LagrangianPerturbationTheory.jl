@@ -1,0 +1,13 @@
+[MPIPreferences]
+__clear__ = ["preloads_env_switch"]
+_format = "1.0"
+abi = "OpenMPI"
+binary = "system"
+cclibs = []
+libmpi = "libmpi"
+mpiexec = "mpiexec"
+preloads = []
+
+[HDF5]
+libhdf5 = "/cita/modules/hdf5/1.12.1-ucx/lib/libhdf5.so"
+libhdf5_hl = "/cita/modules/hdf5/1.12.1-ucx/lib/libhdf5_hl.so"
