@@ -1,0 +1,13 @@
+[HDF5]
+libhdf5 = "/opt/cray/pe/hdf5-parallel/1.12.2.9/gnu/12.3/lib/libhdf5.so"
+libhdf5_hl = "/opt/cray/pe/hdf5-parallel/1.12.2.9/gnu/12.3/lib/libhdf5_hl.so"
+
+[MPIPreferences]
+__clear__ = ["preloads_env_switch"]
+_format = "1.0"
+abi = "MPICH"
+binary = "system"
+cclibs = []
+libmpi = "libmpi_cray"
+mpiexec = "mpiexec"
+preloads = []
