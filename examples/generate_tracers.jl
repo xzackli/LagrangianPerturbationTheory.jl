@@ -33,7 +33,7 @@ function save_positions(filename, δ₀, 𝚿₀, tracer)
         Threads.@spawn draw_tracer_threaded(δ₀, 𝚿₀, tracer, octant)
     end
     positions = package_tracer_positions(fetch.(tasks))
-    save(filename, "positions", positions)
+    save(filename, "positions", positions)  # WebSky reverses the dims: saves as z, y, x
 end
 
 function save_multiple_masses(logmasses, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿₀, hmf, bias) where {T, LPT, TL}
