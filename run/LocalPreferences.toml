@@ -3,11 +3,11 @@ libhdf5 = "/opt/cray/pe/hdf5-parallel/1.12.2.9/gnu/12.3/lib/libhdf5.so"
 libhdf5_hl = "/opt/cray/pe/hdf5-parallel/1.12.2.9/gnu/12.3/lib/libhdf5_hl.so"
 
 [MPIPreferences]
-__clear__ = ["preloads_env_switch"]
-_format = "1.0"
+_format = "1.1"
 abi = "MPICH"
 binary = "system"
-cclibs = []
-libmpi = "libmpi_cray"
-mpiexec = "mpiexec"
-preloads = []
+cclibs = ["hdf5_hl_parallel", "hdf5_parallel", "cupti", "cudart", "cuda", "sci_gnu_123_mpi", "sci_gnu_123", "dl", "dsmml", "xpmem"]
+libmpi = "libmpi_gnu_123.so"
+mpiexec = "srun"
+preloads = ["libmpi_gtl_cuda.so"]
+preloads_env_switch = "MPICH_GPU_SUPPORT_ENABLED"
