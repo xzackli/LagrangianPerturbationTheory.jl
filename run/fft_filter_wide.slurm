@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -A mp107d
-#SBATCH --qos=preempt
+#SBATCH --qos=regular
 #SBATCH -C cpu
 #SBATCH -t 2:00:00
 #SBATCH --nodes=32

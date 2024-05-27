@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -A mp107d
-#SBATCH --qos=debug
+#SBATCH --qos=regular
 #SBATCH -C cpu
-#SBATCH -t 0:30:00
-#SBATCH --nodes=8
+#SBATCH -t 2:00:00
+#SBATCH --nodes=16
 #SBATCH --ntasks-per-node=16
 #SBATCH --cpus-per-task=16
 #SBATCH -o /pscratch/sd/x/xzackli/joboutput/%x.o%j

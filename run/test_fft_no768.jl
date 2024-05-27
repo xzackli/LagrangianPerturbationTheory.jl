@@ -4,6 +4,7 @@ using PencilArrays
 using PencilFFTs
 using AbstractFFTs
 using LinearAlgebra  # for mul!, ldiv!
+PencilFFTs.FFTW.set_num_threads(16)
 
 MPI.Init()
 comm = MPI.COMM_WORLD
@@ -33,16 +34,17 @@ function filter_grid!(u::AbstractArray{T}, plan, dims) where T
 
     mul!(v, plan, u)
 
-    kx = fftfreq(dims[1])
-    ky = fftfreq(dims[2])
-    kz = fftfreq(dims[3])
-
-    kvec = (kx, ky, kz)
+    kvec = fftfreq(dims[1]), fftfreq(dims[2]), fftfreq(dims[3])
     grid_fourier = localgrid(v, kvec)
-
+    kx, ky, kz = grid_fourier[1], grid_fourier[2], grid_fourier[3]
     σ = 2.5
     filter_factor = T(-2 * π^2 * σ^2)
-    @. v *= exp( filter_factor * (grid_fourier[1]^2 + grid_fourier[2]^2 +  grid_fourier[3]^2)  )
+    Threads.@threads for k in axes(v, 3)
+        for j in axes(v, 2), i in axes(v, 1)
+            v[i,j,k] *= exp( filter_factor * (kx[i]^2 + ky[j]^2 + kz[k]^2) )
+        end
+    end
+    # @. v *= exp( filter_factor * (grid_fourier[1]^2 + grid_fourier[2]^2 +  grid_fourier[3]^2)  )
 
     ldiv!(u, plan, v)  # now w ≈ u
     return u
