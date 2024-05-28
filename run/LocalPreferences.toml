@@ -11,3 +11,6 @@ libmpi = "libmpi_gnu_123.so"
 mpiexec = "srun"
 preloads = ["libmpi_gtl_cuda.so"]
 preloads_env_switch = "MPICH_GPU_SUPPORT_ENABLED"
+
+[MPICH_jll]
+libmpi_path = "/opt/cray/pe/mpich/8.1.28/ofi/gnu/12.3/lib/libmpi.so"

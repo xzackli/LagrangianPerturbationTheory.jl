@@ -5,15 +5,14 @@ using PencilFFTs
 using AbstractFFTs
 using LinearAlgebra  # for mul!, ldiv!
 PencilFFTs.FFTW.set_num_threads(Threads.nthreads())  # match thread count
-MPI.Init()
-comm = MPI.COMM_WORLD
 
-function setup_grid(fname, plan, comm)
-    u = allocate_input(plan)
-    open(PencilArrays.PencilIO.PHDF5Driver(), fname, comm, read=true) do ff
-        read!(ff, u, "data")
-    end
-    return u
+
+function read_into_pencil_array!(u, fname, comm, info)
+    ff = h5open(fname, "r", comm, info)
+    slices = range_local(u)
+    dset = ff["data"]
+    u .= dset[slices...]
+    close(ff)
 end
 
 function apply_gaussian!(v::AbstractArray{Complex{T}}, dims) where T
@@ -29,37 +28,48 @@ function apply_gaussian!(v::AbstractArray{Complex{T}}, dims) where T
     end
 end
 
-function filter_grid!(u, v, plan, dims)
-    mul!(v, plan, u)
-    apply_gaussian!(v, dims)
-    ldiv!(u, plan, v)
+function write_grid(u::AbstractArray{Complex{T}}, fname, comm, info) where T
+    out_fname = replace(fname, (".h5" =>  "_filtered.h5"))
+    slices = range_local(u)
+    ff = h5open(out_fname, "w", comm, info)
+    dset = create_dataset(ff, "data", datatype(T), dataspace(size_global(u)))
+    local_array = parent(u)
+    dset[slices...] = real.(local_array)
+    close(ff)
 end
 
-function run(T, comm)
-    # Input data dimensions (Nx × Ny × Nz)
-    dims = (6144, 6144, 6144)
-    fname = "/pscratch/sd/x/xzackli/websky_convert/displacementprocessing/Fvec_7700Mpc_n6144_nb30_nt16_p.h5"
+function run(T, dims, fname)
+    MPI.Init()
+    comm = MPI.COMM_WORLD       # MPI communicator
+    rank = MPI.Comm_rank(comm)  # rank of local process
+    info = MPI.Info()
 
     pen = Pencil(dims, comm)
-    transform = Transforms.RFFT()
+    transform = Transforms.FFT!()
     plan = PencilFFTPlan(pen, transform, T)
-    if MPI.Comm_rank(comm) == 1
-        print(plan)
-    end
+    rank == 1 && print(plan)
 
-    u = setup_grid(fname, plan, comm)
-    println("FINISHED READING, I am $(MPI.Comm_rank(comm)) of $(MPI.Comm_size(comm))")
-    GC.gc(true); GC.gc(false); GC.gc(true); GC.gc(false); GC.gc(true); GC.gc(false);
-    GC.gc(true); GC.gc(false); GC.gc(true); GC.gc(false); GC.gc(true); GC.gc(false);
+    us = allocate_input(plan)
+    u = first(us)
+    û = last(us)
+
+    read_into_pencil_array!(u, fname, comm, info)
+    println("FINISHED READING, I am $(MPI.Comm_rank(comm)) of $(MPI.Comm_size(comm)) with " 
+        * string(range_local(first(us))))
+    MPI.Barrier(comm)
+    GC.gc()
     
-    v = allocate_output(plan)
-    println("FINISHED ALLOCATING OUTPUT, I am $(MPI.Comm_rank(comm)) of $(MPI.Comm_size(comm))")
-    filter_grid!(u, v, plan, dims)
+    plan * us  # apply FFT
+    apply_gaussian!(û, dims)  # filter û
+    plan \ us  # apply IFFT
     println("FINISHED FILTERING, I am $(MPI.Comm_rank(comm)) of $(MPI.Comm_size(comm))")
+    GC.gc()
 
-    open(PencilArrays.PencilIO.PHDF5Driver(), "filtered_$(fname)", MPI.COMM_WORLD; write=true) do ff
-        ff["data"] = u
-    end
+    write_grid(u, fname, comm, info)  # write the real-space array
+    MPI.Comm_rank(comm) == 1 && println("FINISHED WRITING")
 end
 
-run(Float32, comm)
+
+dims = (6144, 6144, 6144)
+fname = "/pscratch/sd/x/xzackli/websky_convert/displacementprocessing/Fvec_7700Mpc_n6144_nb30_nt16_p.h5"
+run(Float32, dims, fname)

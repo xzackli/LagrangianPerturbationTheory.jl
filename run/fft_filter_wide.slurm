@@ -2,22 +2,25 @@
 #SBATCH -A mp107d
 #SBATCH --qos=regular
 #SBATCH -C cpu
-#SBATCH -t 2:00:00
+#SBATCH -t 1:00:00
 #SBATCH --nodes=32
-#SBATCH --ntasks-per-node=128
+#SBATCH --ntasks-per-node=16
+#SBATCH --cpus-per-task=16
 #SBATCH -o /pscratch/sd/x/xzackli/joboutput/%x.o%j
-#SBATCH -J fullresfilter_wide
+#SBATCH -J big_filter
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=zackli@berkeley.edu
-
-# go to your working directory containing the batch script, code and data
+#SBATCH --exclusive
 
 cd /pscratch/sd/x/xzackli/websky_convert/LagrangianPerturbationTheory.jl/run/
 module load cray-mpich
 module load cray-hdf5-parallel
-export JULIA_NUM_THREADS=1
+export JULIA_NUM_THREADS=8
+which julia
 
-# julia --project -e 'using Pkg; Pkg.instantiate()'
-# julia --project -e 'using Pkg; Pkg.precompile()'
+julia --project=. -e \
+    'using Pkg; using InteractiveUtils;
+     Pkg.instantiate(); Pkg.precompile(); Pkg.status(); versioninfo();
+     using MPI; println("MPI: ", MPI.identify_implementation());'
 
-/global/homes/x/xzackli/.julia/bin/mpiexecjl --project=. -n 4096 --cpu-bind=cores -c 2 julia fft_filter_6144.jl
+/global/homes/x/xzackli/.julia/bin/mpiexecjl --project=. --cpu-bind=cores julia fft_filter_6144.jl

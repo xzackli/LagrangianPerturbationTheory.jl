@@ -15,7 +15,7 @@
 cd /pscratch/sd/x/xzackli/websky_convert/LagrangianPerturbationTheory.jl/run/
 module load cray-mpich
 module load cray-hdf5-parallel
-export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export JULIA_NUM_THREADS=8
 which julia
 
 julia --project=. -e \
