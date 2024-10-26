@@ -1,9 +1,12 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LagrangianPerturbationTheory = "5e1607e4-5f4d-4e56-95bd-eafa9ef667dd"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PoissonRandom = "e409e4f3-bfea-5376-8464-e040bb5c01ab"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 UnitfulAstro = "6112ee07-acf9-5e0f-b108-d242c714bf9f"
+XGPaint = "af630e4a-6754-4ec2-ab8a-f9f8b9ebafbf"

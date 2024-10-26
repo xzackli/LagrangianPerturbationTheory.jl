@@ -17,10 +17,10 @@ end
 # todo: read the sliced array
 function read_websky_ics(file_den, file_sx, file_sy, file_sz, cosmo, boxsize=7700.f0u"Mpc")
     
-    delta_array = h5open(file_den, "r") do f read(f, "data") end
-    sx_array = h5open(file_sx, "r") do f permutedims(read(f, "data"), (3,2,1)) end
-    sy_array = h5open(file_sy, "r") do f permutedims(read(f, "data"), (3,2,1)) end
-    sz_array = h5open(file_sz, "r") do f permutedims(read(f, "data"), (3,2,1)) end
+    delta_array = h5open(file_den, "r") do f permutedims(read(f, "data"), (3,2,1)) end
+    sx_array = h5open(file_sz, "r") do f read(f, "data") end
+    sy_array = h5open(file_sy, "r") do f read(f, "data") end
+    sz_array = h5open(file_sx, "r") do f read(f, "data") end
 
     # assuming cube
     @assert (

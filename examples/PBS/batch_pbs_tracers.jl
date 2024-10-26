@@ -19,10 +19,10 @@ for job_masses in partition(masses, masses_per_job)
 #!/bin/bash -l
 #PBS -l nodes=1:ppn=16
 #PBS -l mem=64gb
-#PBS -l walltime=1:00:00
+#PBS -l walltime=2:00:00
 #PBS -r n
 #PBS -j oe
-#PBS -q sandyq
+#PBS -q starq
 
 # go to your working directory containing the batch script, code and data
 cd $workdir

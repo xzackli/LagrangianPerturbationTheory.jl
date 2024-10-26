@@ -14,7 +14,7 @@ function draw_tracer!(halo_positions, δ₀::ICFieldWebsky{T, LPT, TL}, 𝚿⁽�
             n̄ = mean_density(tracer, a)         # mean tracer density at cell center
             b⁽¹⁾ᴸ = bias_lagrangian(tracer, a)  # Lagrangian bias at cell center
             δ⁽¹⁾ᴸ = D * δ₀[𝐪]                   # Lagrangian density at grid cell
-            N = pois_rand(n̄ * (1 + b⁽¹⁾ᴸ * δ⁽¹⁾ᴸ) * grid.dV)  # find N to Poisson draw
+            N = pois_rand(Float64(n̄ * (1 + b⁽¹⁾ᴸ * δ⁽¹⁾ᴸ) * grid.dV))  # find N to Poisson draw
             for _ in 1:N                        # now generate N halos
                 𝐪ₕ = random_position_in_cell(grid, 𝐪) # randomly distribute halo in cell
                 𝚿⁽¹⁾ₕ = 𝚿⁽¹⁾₀[𝐪ₕ]               # interpolate the displacement

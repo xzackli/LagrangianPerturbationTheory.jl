@@ -1,5 +1,5 @@
 using LagrangianPerturbationTheory, Unitful, UnitfulAstro, StaticArrays, JLD2, FileIO, Printf
-import PythonPlot; const plt = PythonPlot
+
 icdir = "/fs/lustre/scratch/zack/ICs/"
 files = (den=joinpath(icdir, "Fvec_7700Mpc_n6144_nb30_nt16_no768.h5"),
          sx=joinpath(icdir, "sx1_7700Mpc_n6144_nb30_nt16_no768.h5"),
