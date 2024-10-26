@@ -49,7 +49,7 @@ massdef = CCLMassDef(200, "matter")
 hmf = CCLMassFuncTinker08(ccl, massdef)
 
 ##
-import PythonPlot; const plt = PythonPlot
+import PythonPlot
 plt.close()
 plt.hist([pois_rand(n̄ * (1 + b⁽¹⁾ᴸ * δ⁽¹⁾ᴸ) * dV) for i in 1:100])
 plt.gcf()
